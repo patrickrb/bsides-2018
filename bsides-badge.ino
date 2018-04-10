@@ -129,14 +129,41 @@ void setup() {
   }
 }
 void loop() {
-  int randomNumber = random(2);
+  int randomNumber = random(3);
   if (randomNumber == 1) {
     fallingAnimation();
   }
-  else {
+  else if(randomNumber == 2) {
     snowAnimation();
   }
+  else {
+    fastSnow();
+  }
 }
+
+void fastSnow() {
+while( 1 == 1) {
+    unsigned long loopCount = 0;                          // used to determine duty cycle of each LED
+    unsigned long timeNow = millis();                     //
+    unsigned long displayTime = 60; //10 + random(90);          // milliseconds to spend at each focus LED in descent
+    while(millis()- timeNow < (displayTime+current*2)) {  // animation slows toward end
+      loopCount++;
+      // the "snowflake" gets full duty cycle.  When it gets to the end, hold it at the end until the tail collapses
+      if (current > 19) charlieON(19); 
+      else charlieON(current);
+      // each member of tail has reduced duty cycle, and never get to the final position
+      if(!(loopCount % 3)) if(current-1 >=0 && current-1 < 19) charlieON(current-1);
+      if(!(loopCount % 6)) if(current-2 >=0 && current-2 < 19) charlieON(current-2);
+      if(!(loopCount % 9)) if(current-3 >=0 && current-3 < 19) charlieON(current-3);
+      if(!(loopCount % 12)) if(current-4 >=0 && current-4 < 19) charlieON(current-4);
+    }
+
+    handleTime(timeNow, displayTime);
+    //delay(100);
+  }
+}
+
+
 
 void snowAnimation() {
   while( 1 == 1) {
@@ -154,51 +181,8 @@ void snowAnimation() {
       if(!(loopCount % 9)) if(current-3 >=0 && current-3 < 19) charlieON(current-3);
       if(!(loopCount % 12)) if(current-4 >=0 && current-4 < 19) charlieON(current-4);
     }
-      if(ontime) {
-      if(timeNow > (toggleTime + displayTime)) {
-        // Has been on for delay time.  Switch off.
-        //ontime=false;
-        // Step thru (scroll) the array - move everything "down" 5 steps.
-        offset+=stepsize;
-        //offset = 5;
-        if(offset >= 20){
-          offset = 0;
-        }
-        for(int dispidx=19; dispidx>=0; dispidx--){
-          if((dispidx-offset) >= 0){
-            disp[dispidx] = grid[dispidx-offset];
-          }
-          else {
-            disp[dispidx] = 0;
-          }
-        }
-       
-        //scrollDisp(disp);
-        
-        toggleTime=timeNow;
-      }
-    }
-    else {
-      if(timeNow > (toggleTime + displayTime)) {
-        //ontime=true;
-        toggleTime=timeNow;
-      }
-    }
-  ontime=1;
-    // Cycle thru each LED
-    if(ontime){
-      if(current > 0) {
-        charlieOFF(current - 1);
-      }
-      if(disp[current]){
-        charlieON(current);
-      }
-    }
-    current++;
-    if(current > 19) {
-      charlieOFF(19);
-      current = 0;
-    }
+      
+    handleTime(timeNow, displayTime);
     //delay(100);
   }
 }
@@ -207,64 +191,8 @@ void fallingAnimation() {
   while( 1 == 1) {
     unsigned long loopCount = 0;                          // used to determine duty cycle of each LED
     unsigned long timeNow = millis();                     //
-    unsigned long displayTime = 250; //10 + random(90);          // milliseconds to spend at each focus LED in descent
-    /*while(millis()- timeNow < (displayTime+current*2)) {  // animation slows toward end
-      loopCount++;
-      // the "snowflake" gets full duty cycle.  When it gets to the end, hold it at the end until the tail collapses
-      if (current > 19) charlieON(19); 
-      else charlieON(current);
-      // each member of tail has reduced duty cycle, and never get to the final position
-      if(!(loopCount % 3)) if(current-1 >=0 && current-1 < 19) charlieON(current-1);
-      if(!(loopCount % 6)) if(current-2 >=0 && current-2 < 19) charlieON(current-2);
-      if(!(loopCount % 9)) if(current-3 >=0 && current-3 < 19) charlieON(current-3);
-      if(!(loopCount % 12)) if(current-4 >=0 && current-4 < 19) charlieON(current-4);
-    }*/
-    if(ontime) {
-      if(timeNow > (toggleTime + displayTime)) {
-        // Has been on for delay time.  Switch off.
-        //ontime=false;
-        // Step thru (scroll) the array - move everything "down" 5 steps.
-        offset+=stepsize;
-        //offset = 5;
-        if(offset >= 20){
-          offset = 0;
-        }
-        for(int dispidx=19; dispidx>=0; dispidx--){
-          if((dispidx-offset) >= 0){
-            disp[dispidx] = grid[dispidx-offset];
-          }
-          else {
-            disp[dispidx] = 0;
-          }
-        }
-       
-        //scrollDisp(disp);
-        
-        toggleTime=timeNow;
-      }
-    }
-    else {
-      if(timeNow > (toggleTime + displayTime)) {
-        //ontime=true;
-        toggleTime=timeNow;
-      }
-    }
-  ontime=1;
-    // Cycle thru each LED
-    if(ontime){
-      if(current > 0) {
-        charlieOFF(current - 1);
-      }
-      if(disp[current]){
-        charlieON(current);
-      }
-    }
-    current++;
-    if(current > 19) {
-      charlieOFF(19);
-      current = 0;
-    }
-    //delay(100);
+    unsigned long displayTime = 250; //10 + random(90);          // milliseconds to spend at each focus LED in descent    
+    handleTime(timeNow, displayTime);
   }
 }
 void scrollDisp(int curDisp){
@@ -297,3 +225,50 @@ void charlieOFF(int thisLED) {
   pinMode(charliePin[LED[thisLED][1]], INPUT);
 }
 
+void handleTime(unsigned long timeNow, unsigned long displayTime) {
+    if(ontime) {
+    if(timeNow > (toggleTime + displayTime)) {
+      // Has been on for delay time.  Switch off.
+      //ontime=false;
+      // Step thru (scroll) the array - move everything "down" 5 steps.
+      offset+=stepsize;
+      //offset = 5;
+      if(offset >= 20){
+        offset = 0;
+      }
+      for(int dispidx=19; dispidx>=0; dispidx--){
+        if((dispidx-offset) >= 0){
+          disp[dispidx] = grid[dispidx-offset];
+        }
+        else {
+          disp[dispidx] = 0;
+        }
+      }
+     
+      //scrollDisp(disp);
+      
+      toggleTime=timeNow;
+    }
+  }
+  else {
+    if(timeNow > (toggleTime + displayTime)) {
+      //ontime=true;
+      toggleTime=timeNow;
+    }
+  }
+ontime=1;
+  // Cycle thru each LED
+  if(ontime){
+    if(current > 0) {
+      charlieOFF(current - 1);
+    }
+    if(disp[current]){
+      charlieON(current);
+    }
+  }
+  current++;
+  if(current > 19) {
+    charlieOFF(19);
+    current = 0;
+  }
+}
